@@ -15,7 +15,11 @@
 
 namespace wheel {
 
-CTimer::CTimer(int delay, int interval, func_type func) : delay(delay), interval(interval), handler(func) {}
+CTimer::CTimer(const char *desc, int delay, int interval, func_type func)
+    : m_delay(delay), m_interval(interval), m_handler(func) {
+    auto &handler = CTimerHandler::instance();
+    m_id = handler.cycle_shot(desc, delay, interval, func);
+}
 
 int CTimer::single_shot(int delay, func_type func) {
     auto &handler = CTimerHandler::instance();

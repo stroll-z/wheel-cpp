@@ -1,3 +1,14 @@
+/**
+ * @file log.h
+ * @author your name (you@domain.com)
+ * @brief 打印部分封装
+ * @version 0.1
+ * @date 2023-10-25
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
+
 #pragma once
 
 #include <cstdio>

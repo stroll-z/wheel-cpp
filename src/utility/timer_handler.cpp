@@ -33,30 +33,81 @@ CTimerHandler::CTimerHandler() {
         thr.detach();
     }
 
+    // 等待子线程在条件变量上阻塞
+    while (m_freeThrNum != INIT_THREAD_NUM) {
+        std::this_thread::yield();
+    }
+
     {  // 唤醒一个线程去处理
         std::unique_lock<std::mutex> lock(m_mtx);
-        m_readyFlag.store(true);
+        m_readyFlag = true;
     }
     m_cond.notify_one();
 }
 
-int CTimerHandler::single_shot(int deley_ms, CTimer::func_type handler) {
-    LOGE("ctimer", "single_shot");
-    return -1;
+int CTimerHandler::single_shot(int delay_ms, CTimer::func_type handler) {
+    if (delay_ms < 0 || !static_cast<bool>(handler)) {
+        LOGE(TAG, "invalid param");
+        return -1;
+    }
+
+    std::lock_guard<std::mutex> guard(m_poolMtx);
+    auto it = find_one_free_entry();
+    if (it == m_entrySet.end()) {
+        m_entrySet.emplace_back("", delay_ms, -1, handler);
+        return 0;
+    }
+    fill_entry(it, "", delay_ms, -1, handler);
+    return 0;
+}
+
+int CTimerHandler::cycle_shot(const char *desc, int delay_ms, int interval, CTimer::func_type handler) {
+    if (!desc || interval < 0 || delay_ms < 0 || !static_cast<bool>(handler)) {
+        LOGE(TAG, "param invalid");
+        return -1;
+    }
+
+    std::lock_guard<std::mutex> guard(m_poolMtx);
+    auto it = find_one_free_entry();
+    if (it == m_entrySet.end()) {
+        m_entrySet.emplace_back(desc, delay_ms, interval, handler);
+        return m_entrySet.size() - 1;
+    }
+    fill_entry(it, desc, delay_ms, interval, handler);
+    return it - m_entrySet.begin();
+}
+
+void CTimerHandler::fill_entry(std::vector<handler_entry>::iterator it, const char *desc, int delay, int interval,
+                               CTimer::func_type handler) {
+    it->deleted = false;
+    it->interval = interval;
+    it->delay = delay;
+    it->description = desc;
+    it->func = handler;
+    it->work_flag = false;
+}
+
+auto CTimerHandler::find_one_free_entry() -> std::vector<handler_entry>::iterator {
+    for (auto it = m_entrySet.begin(); it != m_entrySet.end(); ++it) {
+        if (it->deleted) {
+            return it;
+        }
+    }
+    return m_entrySet.end();
 }
 
 void CTimerHandler::onHandler() {
     while (!m_exitFlag.load()) {
         std::unique_lock<std::mutex> lock(m_mtx);
-        m_freeThrNum.fetch_add(1);
-        m_cond.wait(lock);
-        m_freeThrNum.fetch_sub(1);
-        if (!m_readyFlag.load()) {  // 意外唤醒
-            m_readyFlag.store(false);
-            continue;
+        m_freeThrNum += 1;
+        while (!m_readyFlag) {  // 防止意外唤醒
+            m_cond.wait(lock);
         }
-        m_readyFlag.store(false);
+        m_freeThrNum -= 1;
+        m_readyFlag = false;
+        lock.unlock();
 
+        /// 找一个待处理的句柄
         auto index = find_one_ready_entry();
         if (index == -1) {
             LOGE(TAG, "Are you quitting?");
@@ -64,14 +115,17 @@ void CTimerHandler::onHandler() {
         }
 
         // 检查是否有空闲的线程,如果有提升一个线程来检查准备好的handler
-        while (m_freeThrNum.load() == 0) {
+        while (m_freeThrNum == 0) {
             std::this_thread::yield();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
+        onCallback(index);
     }
     LOGW(TAG, "exit flag is set, and thread exit");
 }
 
 auto CTimerHandler::find_one_ready_entry() -> int {
+    std::lock_guard<std::mutex> guard(m_poolMtx);
     while (!m_exitFlag.load()) {
         for (auto it = m_entrySet.begin(); it != m_entrySet.end(); ++it) {
             if (it->deleted) {
@@ -84,12 +138,26 @@ auto CTimerHandler::find_one_ready_entry() -> int {
 }
 
 void CTimerHandler::onCallback(int index) {
-    auto &item = m_entrySet.at(index);
-    item.work_flag = true;
-    item.tp = std::chrono::steady_clock::now();
-    lock.unlock();
+    m_mtx.lock();
+    m_readyFlag = true;
+    m_mtx.unlock();
     m_cond.notify_one();
-    item.func();  // 执行准备好的handler
+
+    CTimer::func_type cb;
+    {
+        std::lock_guard<std::mutex> guard(m_poolMtx);
+        auto &item = m_entrySet.at(index);
+        item.work_flag = true;
+        item.tp = std::chrono::steady_clock::now();
+        cb = item.func;
+    }
+
+    cb();  // 执行准备好的handler
+    {
+        std::lock_guard<std::mutex> guard(m_poolMtx);
+        auto &item = m_entrySet.at(index);
+        item.work_flag = false;
+    }
 }
 
 }  // namespace wheel

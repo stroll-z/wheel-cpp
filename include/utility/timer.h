@@ -28,10 +28,11 @@ class CTimer {
 
    public:
     /// @brief 构造定时器
+    /// @param desc 描述语句, 异常时可辨识
     /// @param delay 第一次延迟执行
     /// @param interval 执行间隔
     /// @param func 执行体
-    CTimer(int delay, int interval, func_type func);
+    CTimer(const char *desc, int delay, int interval, func_type func);
 
     /// @brief 单次调用, 仅调用一次
     /// @param delay 延迟执行,单位ms
@@ -55,9 +56,10 @@ class CTimer {
     int stop(void);
 
    private:
-    int delay = 0;
-    int interval = 0;
-    func_type handler;
+    int m_id = -1;
+    int m_delay = 0;
+    int m_interval = 0;
+    func_type m_handler;
 };
 
 }  // namespace wheel
