@@ -6,7 +6,7 @@ set(SRC_LIST $ENV{SAMPLE_SRC})
 
 set(CMAKE_CXX_STANDARD 14)
 #add_compile_options(-Wall)
-add_compile_definitions(WHEEL_LOG_LEVEL=3)
+add_compile_definitions(WHEEL_LOG_LEVEL=4)
 
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "SAMPLE_SRC: ${SAMPLE_SRC}")
