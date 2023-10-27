@@ -15,6 +15,11 @@
 
 namespace wheel {
 
+/// @brief 打印等级 0-close, error-1, warning-2, info-3, debug-4, verbose-5
+#ifndef WHEEL_LOG_LEVEL
+#define WHEEL_LOG_LEVEL 2
+#endif
+
 #ifdef LOG_E
 #undef LOG_E
 #endif
@@ -42,7 +47,7 @@ constexpr const char *base_file_name(const char *const p) {
     auto ret = p;
     for (auto i = p; *i != '\0'; ++i) {
         if (*i == '/' || *i == '\\') {
-            ret = i;
+            ret = i + 1;
         }
     }
     return ret;
@@ -51,21 +56,37 @@ constexpr const char *base_file_name(const char *const p) {
 extern const char *make_current_ts();
 
 #define LOG_BASE(color, tag, fmt, ...)                                                                                 \
-    printf(color "[%s][%s][%s:%s:%d] " fmt "\n" COLOR_NOR, make_current_ts(), tag, base_file_name(__FILE__), __func__, \
-           __LINE__, ##__VA_ARGS__)
+    printf(color "[%s][%s][%s:%d:%s] " fmt "\n" COLOR_NOR, make_current_ts(), tag, base_file_name(__FILE__), __LINE__, \
+           __func__, ##__VA_ARGS__)
 
+#if (WHEEL_LOG_LEVEL > 0)
 #define LOG_E(tag, fmt, ...) LOG_BASE(COLOR_RED, "E/" tag, fmt, ##__VA_ARGS__)
+#else
+#define LOG_E(tag, fmt, ...)
+#endif
 
-#if defined(DEBUG_TRACE_POINT)
+#if (WHEEL_LOG_LEVEL > 1)
+#define LOG_W(tag, fmt, ...) LOG_BASE(COLOR_YELLOW, "W/" tag, fmt, ##__VA_ARGS__)
+#else
+#define LOG_W(tag, fmt, ...)
+#endif
+
+#if (WHEEL_LOG_LEVEL > 2)
+#define LOG_I(tag, fmt, ...) LOG_BASE(COLOR_GREEN, "I/" tag, fmt, ##__VA_ARGS__)
+#else
+#define LOG_I(tag, fmt, ...)
+#endif
+
+#if (WHEEL_LOG_LEVEL > 3)
 #define LOG_D(tag, fmt, ...) LOG_BASE(COLOR_WHITE, "D/" tag, fmt, ##__VA_ARGS__)
 #else
 #define LOG_D(tag, fmt, ...)
 #endif
 
-#define LOG_I(tag, fmt, ...) LOG_BASE(COLOR_GREEN, "I/" tag, fmt, ##__VA_ARGS__)
-
-#define LOG_W(tag, fmt, ...) LOG_BASE(COLOR_YELLOW, "W/" tag, fmt, ##__VA_ARGS__)
-
+#if (WHEEL_LOG_LEVEL > 4)
 #define LOG_V(tag, fmt, ...) LOG_BASE(COLOR_WHITE, "V/" tag, fmt, ##__VA_ARGS__)
+#else
+#define LOG_V(tag, fmt, ...)
+#endif
 
 }  // namespace wheel
