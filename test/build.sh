@@ -19,4 +19,4 @@ export SAMPLE_SRC
 
 # 先编译库
 cd $ROOT_DIR/../;./build.sh;cd $ROOT_DIR
-cd cmake-build;cmake ..;make;cd -;chmod +x ./demo
+cd cmake-build;cmake ..;make -j8;cd -;chmod +x ./demo
