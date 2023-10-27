@@ -13,6 +13,8 @@
 
 #include <cstdio>
 
+namespace wheel {
+
 #ifdef LOG_E
 #undef LOG_E
 #endif
@@ -36,8 +38,18 @@
 #define COLOR_DP_GREEN "\e[36m"
 #define COLOR_WHITE "\e[37m"
 
+constexpr const char *base_file_name(const char *const p) {
+    auto ret = p;
+    for (auto i = p; *i != '\0'; ++i) {
+        if (*i == '/' || *i == '\\') {
+            ret = i;
+        }
+    }
+    return ret;
+}
+
 #define LOG_BASE(color, tag, fmt, ...)                                                                                 \
-    printf(color "[%s][%s:%d] " fmt "\n" COLOR_NOR, tag, __func__, __LINE__, ##__VA_ARGS__)
+    printf(color "[%s][%s:%s:%d] " fmt "\n" COLOR_NOR, tag, base_file_name(__FILE__), __func__, __LINE__, ##__VA_ARGS__)
 
 #define LOG_E(tag, fmt, ...) LOG_BASE(COLOR_RED, "E/" tag, fmt, ##__VA_ARGS__)
 
@@ -51,4 +63,6 @@
 
 #define LOG_W(tag, fmt, ...) LOG_BASE(COLOR_YELLOW, "W/" tag, fmt, ##__VA_ARGS__)
 
-#define LOGV(tag, fmt, ...) LOG_BASE(COLOR_WHITE, "V/" tag, fmt, ##__VA_ARGS__)
+#define LOG_V(tag, fmt, ...) LOG_BASE(COLOR_WHITE, "V/" tag, fmt, ##__VA_ARGS__)
+
+}  // namespace wheel
