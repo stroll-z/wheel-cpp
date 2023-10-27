@@ -11,26 +11,23 @@
 
 #include "utility/timer.h"
 
-#include "timer_handler.h"
 #include "basic/log.h"
+#include "timer_handler.h"
 
 namespace wheel {
 
-    #define TAG "timer"
+#define TAG "timer"
 
 CTimer::CTimer(const char *desc, int delay, int interval, func_type func)
-    :m_delay(delay), m_interval(interval), m_func(func), m_description(desc) {
-}
+    : m_delay(delay), m_interval(interval), m_func(func), m_description(desc) {}
 
 CTimer::~CTimer() {
     LOG_D(TAG, "c timer destructor");
     if (m_id == -1) {
         return;
     }
-
-    auto &handler = CTimerHandler::instance();
     stop();
-    handler.remove(m_id);
+    CTimerHandler::instance().remove(m_id);
 }
 
 int CTimer::single_shot(int delay, func_type func) {

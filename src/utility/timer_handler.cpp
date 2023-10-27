@@ -18,7 +18,7 @@
 namespace wheel {
 
 #define TAG "timer-handler"
-const int INIT_THREAD_NUM = 4;
+const int INIT_THREAD_NUM = 8;
 
 #define CHECK_HANDLER_ID(ID, VC)                                                                                       \
     do {                                                                                                               \
