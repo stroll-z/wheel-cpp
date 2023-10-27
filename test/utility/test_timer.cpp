@@ -60,7 +60,7 @@ int main() {
         }
 
         if (c == 'r') {
-            timer.start();
+            timer2.start();
         }
     }
     return 0;
