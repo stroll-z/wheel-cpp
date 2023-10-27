@@ -1,2 +1,5 @@
 cmake-build/
 .vscode/
+.DS_Store
+test/demo
+lib/libwheel.a

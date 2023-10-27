@@ -18,10 +18,11 @@
 #pragma once
 
 #include <functional>
+#include <string>
 
 namespace wheel {
 
-class CTimer {
+class CTimer final {
    public:
     /// @brief
     using func_type = std::function<void(void)>;
@@ -33,6 +34,8 @@ class CTimer {
     /// @param interval 执行间隔
     /// @param func 执行体
     CTimer(const char *desc, int delay, int interval, func_type func);
+
+    ~CTimer();
 
     /// @brief 单次调用, 仅调用一次
     /// @param delay 延迟执行,单位ms
@@ -59,7 +62,8 @@ class CTimer {
     int m_id = -1;
     int m_delay = 0;
     int m_interval = 0;
-    func_type m_handler;
+    func_type m_func;
+    std::string m_description;
 };
 
 }  // namespace wheel

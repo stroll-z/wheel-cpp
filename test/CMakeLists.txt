@@ -1,13 +1,14 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.26)
 
 project(SAMPLE)
 
 set(SRC_LIST $ENV{SAMPLE_SRC})
 
+set(CMAKE_CXX_STANDARD 14)
+#add_compile_options(-Wall)
+
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "SAMPLE_SRC: ${SAMPLE_SRC}")
-
-add_compile_options(-Wall -std=c++14)
 
 include_directories(${PROJECT_SOURCE_DIR}/../include)
 

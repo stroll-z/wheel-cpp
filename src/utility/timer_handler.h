@@ -17,6 +17,7 @@
 #include <mutex>
 
 #include "utility/timer.h"
+#include "basic/log.h"
 
 namespace wheel {
 
@@ -26,18 +27,24 @@ class CTimerHandler {
         CTimer::func_type func;
         std::chrono::time_point<std::chrono::steady_clock> tp;
         std::string description;
-        int delay = 0;
-        int interval = 0;  // <0仅运行一次后删除, 0-运行一次保留状态, 其他运行间隔
-        bool deleted = true;
+        int delay = 0; // -1第一次运行后, 其他延迟时长
+        int interval = 0;  // -1仅运行一次后删除, 0-运行一次保留状态, 其他运行间隔
+        bool deleted = false;
         bool work_flag = false;
+        bool pause = false;
 
         handler_entry() = default;
-        handler_entry(const char *desc, int delay_ms, int interval, CTimer::func_type handler)
-            : description(desc), delay(delay_ms), interval(interval), func(handler) {}
+        handler_entry(const std::string &desc, int delay_ms, int interval, CTimer::func_type handler)
+            : func(handler), description(desc), delay(delay_ms), interval(interval) {}
     };
 
    public:
     static CTimerHandler &instance();
+    ~CTimerHandler() {
+        LOG_D("timer-handler", "destructor");
+        m_exitFlag = true;
+        m_cond.notify_all();
+    }
 
    private:
     CTimerHandler();
@@ -46,15 +53,20 @@ class CTimerHandler {
 
    public:
     int single_shot(int delay_ms, CTimer::func_type handler);
-    int cycle_shot(const char *desc, int delay_ms, int interval, CTimer::func_type handler);
+    int launch(int id);
+    int stop(int id);
+    int remove(int id);
+    int cycle_shot(const std::string &desc, int delay_ms, int interval, CTimer::func_type handler);
+    int update_entry_interval(int id, int ms);
 
    private:
     void onHandler();
     auto find_one_ready_entry() -> int;
     auto find_one_free_entry() -> std::vector<handler_entry>::iterator;
-    void fill_entry(std::vector<handler_entry>::iterator it, const char *desc, int delay, int interval,
+    void fill_entry(std::vector<handler_entry>::iterator it, const std::string &desc, int delay, int interval,
                     CTimer::func_type handler);
     void onCallback(int index);
+    int onPause(int index, bool pause);
 
    private:
     std::atomic<bool> m_exitFlag{false};

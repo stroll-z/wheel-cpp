@@ -13,43 +13,42 @@
 
 #include <cstdio>
 
-#ifdef LOGE
-#undef LOGE
+#ifdef LOG_E
+#undef LOG_E
 #endif
 
-#ifdef LOGI
-#undef LOGI
+#ifdef LOG_I
+#undef LOG_I
 #endif
 
-#ifdef LOGD
-#undef LOGD
+#ifdef LOG_D
+#undef LOG_D
 #endif
 
-#ifdef LOGW
-#undef LOGW
+#ifdef LOG_W
+#undef LOG_W
 #endif
 
 #define COLOR_NOR "\e[m"
 #define COLOR_RED "\e[31m"
 #define COLOR_GREEN "\e[32m"
 #define COLOR_YELLOW "\e[33m"
-#define COLOR_DPGREEN "\e[36m"
+#define COLOR_DP_GREEN "\e[36m"
 #define COLOR_WHITE "\e[37m"
 
-#define LOG_BASE(color, tag, fmt, ...) \
+#define LOG_BASE(color, tag, fmt, ...)                                                                                 \
     printf(color "[%s][%s:%d] " fmt "\n" COLOR_NOR, tag, __func__, __LINE__, ##__VA_ARGS__)
 
-#define LOGE(tag, fmt, ...) \
-    LOG_BASE(COLOR_RED, "E/" tag, fmt, ##__VA_ARGS__)
+#define LOG_E(tag, fmt, ...) LOG_BASE(COLOR_RED, "E/" tag, fmt, ##__VA_ARGS__)
 
-#define LOGD(tag, fmt, ...) \
-    LOG_BASE(COLOR_DPGREEN, "D/" tag, fmt, ##__VA_ARGS__)
+#if defined(DEBUG_TRACE_POINT)
+#define LOG_D(tag, fmt, ...) LOG_BASE(COLOR_WHITE, "D/" tag, fmt, ##__VA_ARGS__)
+#else
+#define LOG_D(tag, fmt, ...)
+#endif
 
-#define LOGI(tag, fmt, ...) \
-    LOG_BASE(COLOR_GREEN, "I/" tag, fmt, ##__VA_ARGS__)
+#define LOG_I(tag, fmt, ...) LOG_BASE(COLOR_GREEN, "I/" tag, fmt, ##__VA_ARGS__)
 
-#define LOGW(tag, fmt, ...) \
-    LOG_BASE(COLOR_YELLOW, "W/" tag, fmt, ##__VA_ARGS__)
+#define LOG_W(tag, fmt, ...) LOG_BASE(COLOR_YELLOW, "W/" tag, fmt, ##__VA_ARGS__)
 
-#define LOGV(tag, fmt, ...) \
-    LOG_BASE(COLOR_WHITE, "V/" tag, fmt, ##__VA_ARGS__)
+#define LOGV(tag, fmt, ...) LOG_BASE(COLOR_WHITE, "V/" tag, fmt, ##__VA_ARGS__)
