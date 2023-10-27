@@ -55,36 +55,36 @@ constexpr const char *base_file_name(const char *const p) {
 
 extern const char *make_current_ts();
 
-#define LOG_BASE(color, tag, fmt, ...)                                                                                 \
+#define _LOG_BASE(color, tag, fmt, ...)                                                                                \
     printf(color "[%s][%s][%s:%d:%s] " fmt "\n" COLOR_NOR, make_current_ts(), tag, base_file_name(__FILE__), __LINE__, \
            __func__, ##__VA_ARGS__)
 
 #if (WHEEL_LOG_LEVEL > 0)
-#define LOG_E(tag, fmt, ...) LOG_BASE(COLOR_RED, "E/" tag, fmt, ##__VA_ARGS__)
+#define LOG_E(tag, fmt, ...) _LOG_BASE(COLOR_RED, "E/" tag, fmt, ##__VA_ARGS__)
 #else
 #define LOG_E(tag, fmt, ...)
 #endif
 
 #if (WHEEL_LOG_LEVEL > 1)
-#define LOG_W(tag, fmt, ...) LOG_BASE(COLOR_YELLOW, "W/" tag, fmt, ##__VA_ARGS__)
+#define LOG_W(tag, fmt, ...) _LOG_BASE(COLOR_YELLOW, "W/" tag, fmt, ##__VA_ARGS__)
 #else
 #define LOG_W(tag, fmt, ...)
 #endif
 
 #if (WHEEL_LOG_LEVEL > 2)
-#define LOG_I(tag, fmt, ...) LOG_BASE(COLOR_GREEN, "I/" tag, fmt, ##__VA_ARGS__)
+#define LOG_I(tag, fmt, ...) _LOG_BASE(COLOR_GREEN, "I/" tag, fmt, ##__VA_ARGS__)
 #else
 #define LOG_I(tag, fmt, ...)
 #endif
 
 #if (WHEEL_LOG_LEVEL > 3)
-#define LOG_D(tag, fmt, ...) LOG_BASE(COLOR_WHITE, "D/" tag, fmt, ##__VA_ARGS__)
+#define LOG_D(tag, fmt, ...) _LOG_BASE(COLOR_WHITE, "D/" tag, fmt, ##__VA_ARGS__)
 #else
 #define LOG_D(tag, fmt, ...)
 #endif
 
 #if (WHEEL_LOG_LEVEL > 4)
-#define LOG_V(tag, fmt, ...) LOG_BASE(COLOR_WHITE, "V/" tag, fmt, ##__VA_ARGS__)
+#define LOG_V(tag, fmt, ...) _LOG_BASE(COLOR_WHITE, "V/" tag, fmt, ##__VA_ARGS__)
 #else
 #define LOG_V(tag, fmt, ...)
 #endif

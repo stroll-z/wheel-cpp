@@ -126,6 +126,7 @@ int CTimerHandler::stop(int id) { return onPause(id, true); }
 
 int CTimerHandler::onPause(int index, bool pause) {
     CHECK_HANDLER_ID(index, m_entrySet);
+    LOG_I(TAG, "pause: %d", pause);
     std::lock_guard<std::mutex> guard(m_poolMtx);
     auto &item = m_entrySet[index];
     item.pause = pause;
@@ -177,12 +178,11 @@ auto CTimerHandler::find_one_ready_entry() -> int {
             auto curr_tp = std::chrono::steady_clock::now();
             std::lock_guard<std::mutex> guard(m_poolMtx);
             for (auto it = m_entrySet.begin(); it != m_entrySet.end(); ++it) {
-                if (it->deleted || it->work_flag) {
+                if (it->deleted || it->work_flag || it->pause) {
                     continue;
                 }
 
-                /// 首次延迟执行
-                if (it->delay > 0) {
+                if (it->delay > 0) { /// 首次延迟执行
                     if (it->tp + std::chrono::milliseconds(it->delay) < curr_tp) {
                         it->delay = -1;
                         return it - m_entrySet.begin();
@@ -190,11 +190,12 @@ auto CTimerHandler::find_one_ready_entry() -> int {
                     continue;
                 }
 
-                if (it->delay == 0) {
+                if (it->delay == 0) { /// 首次执行 无延迟
                     it->delay = -1;
                     return it - m_entrySet.begin();
                 }
 
+                /// 间隔执行
                 if (it->tp + std::chrono::milliseconds(it->interval) < curr_tp) {
                     return it - m_entrySet.begin();
                 }

@@ -9,30 +9,33 @@
  *
  */
 
-#include "utility/timer.h"
-#include "basic/log.h"
 #include <iostream>
+#include <thread>
+#include <chrono>
+
+#include "basic/log.h"
+#include "utility/timer.h"
 
 using namespace wheel;
 
 void onTimer() {
     static int count = 0;
-    LOG_I("test-timer", "%d", ++count);
+    LOG_I("test-timer", "timer: %d", ++count);
 }
 
 void onTimer1() {
     static int count = 0;
-    LOG_I("test-timer1", "%d", ++count);
+    LOG_I("test-timer1", "timer1: %d", ++count);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1300));
 }
 
 void onTimer2() {
     static int count = 0;
-    LOG_I("test-timer2", "%d", ++count);
+    LOG_I("test-timer2", "timer2: %d", ++count);
 }
 
 int main() {
-    // int count = 0;
-    // CTimer::single_shot(100, onTimer);
+    CTimer::single_shot(100, onTimer);
 
     CTimer timer{"test-timer1", 1000, 1000, onTimer1};
     timer.start();
@@ -40,8 +43,25 @@ int main() {
     CTimer timer2{"test-timer2", 1000, 10000, onTimer2};
     timer2.start();
 
-    char c;
-    std::cin >> c;
-    LOG_W("", "%c", c);
+    while (1) {
+        char c;
+        std::cin >> c;
+        LOG_W("", "%c", c);
+        if (c == 'q') {
+            break;
+        }
+
+        if (c == 's') {
+            timer2.set_interval(1000);
+        }
+
+        if (c == 'p') {
+            timer2.stop();
+        }
+
+        if (c == 'r') {
+            timer.start();
+        }
+    }
     return 0;
 }
