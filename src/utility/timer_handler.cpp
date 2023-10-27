@@ -23,7 +23,7 @@ const int INIT_THREAD_NUM = 8;
 #define CHECK_HANDLER_ID(ID, VC)                                                                                       \
     do {                                                                                                               \
         if (ID == -1 || ID >= VC.size()) {                                                                             \
-            LOG_E(TAG, "invalid id");                                                                                   \
+            LOG_E(TAG, "invalid id");                                                                                  \
             return -1;                                                                                                 \
         }                                                                                                              \
     } while (0)
@@ -34,7 +34,7 @@ CTimerHandler &CTimerHandler::instance(void) {
 }
 
 CTimerHandler::CTimerHandler() {
-    LOG_D("timer-handler", "constructor");
+    TIMER_DEBUG("timer-handler", "constructor");
     // 创建线程可能会失败而抛出异常, 构造里抛异常肯定不行. 这里要catch异常
     // TODO catch exception
     for (auto i = 0; i < INIT_THREAD_NUM; ++i) {
@@ -47,7 +47,7 @@ CTimerHandler::CTimerHandler() {
         std::this_thread::yield();
     }
 
-    LOG_D(TAG, "free thread num:%d", m_freeThrNum);
+    TIMER_DEBUG(TAG, "free thread num:%d", m_freeThrNum);
     {  // 唤醒一个线程去处理
         std::unique_lock<std::mutex> lock(m_mtx);
         m_readyFlag = true;
@@ -65,7 +65,7 @@ int CTimerHandler::single_shot(int delay_ms, CTimer::func_type handler) {
     auto it = find_one_free_entry();
     if (it == m_entrySet.end()) {
         m_entrySet.emplace_back("unknown", delay_ms, -1, handler);
-        LOG_D(TAG, "emplace entry");
+        TIMER_DEBUG(TAG, "emplace entry");
         return 0;
     }
     fill_entry(it, std::string("unknown"), delay_ms, -1, handler);
@@ -145,7 +145,7 @@ void CTimerHandler::onHandler() {
     while (!m_exitFlag.load()) {
         std::unique_lock<std::mutex> lock(m_mtx);
         m_freeThrNum += 1;
-        LOG_D(TAG, "onHandler: %d", m_freeThrNum);
+        TIMER_DEBUG(TAG, "onHandler: %d", m_freeThrNum);
         while (!m_readyFlag) {  // 防止意外唤醒
             m_cond.wait(lock);
         }
@@ -153,7 +153,7 @@ void CTimerHandler::onHandler() {
         m_readyFlag = false;
         lock.unlock();
 
-        LOG_D(TAG, "to find ready entry: %d", m_freeThrNum);
+        TIMER_DEBUG(TAG, "to find ready entry: %d", m_freeThrNum);
         /// 找一个待处理的句柄
         auto index = find_one_ready_entry();
         if (index == -1) {

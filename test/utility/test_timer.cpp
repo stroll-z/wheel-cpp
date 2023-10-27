@@ -37,7 +37,7 @@ int main() {
     CTimer timer{"test-timer1", 1000, 1000, onTimer1};
     timer.start();
 
-    CTimer timer2{"test-timer2", 1000, 2000, onTimer2};
+    CTimer timer2{"test-timer2", 1000, 10000, onTimer2};
     timer2.start();
 
     char c;

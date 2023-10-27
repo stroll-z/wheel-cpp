@@ -22,7 +22,7 @@ CTimer::CTimer(const char *desc, int delay, int interval, func_type func)
     : m_delay(delay), m_interval(interval), m_func(func), m_description(desc) {}
 
 CTimer::~CTimer() {
-    LOG_D(TAG, "c timer destructor");
+    TIMER_DEBUG(TAG, "c timer destructor");
     if (m_id == -1) {
         return;
     }
@@ -55,7 +55,7 @@ int CTimer::start(void) {
     }
 
     m_id = handler.cycle_shot(m_description, m_delay, m_interval, m_func);
-    LOG_D(TAG, "m_id:%d", m_id);
+    TIMER_DEBUG(TAG, "m_id:%d", m_id);
     return 0;
 }
 

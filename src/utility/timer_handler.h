@@ -16,10 +16,16 @@
 #include <condition_variable>
 #include <mutex>
 
-#include "utility/timer.h"
 #include "basic/log.h"
+#include "utility/timer.h"
 
 namespace wheel {
+
+#if defined(TIMER_DEBUG_TRACE)
+#define TIMER_DEBUG(FMT, ...) LOG_D(FMT, ##__VA_ARGS__)
+#else
+#define TIMER_DEBUG(FMT, ...)
+#endif
 
 class CTimerHandler {
    public:
@@ -27,7 +33,7 @@ class CTimerHandler {
         CTimer::func_type func;
         std::chrono::time_point<std::chrono::steady_clock> tp;
         std::string description;
-        int delay = 0; // -1第一次运行后, 其他延迟时长
+        int delay = 0;     // -1第一次运行后, 其他延迟时长
         int interval = 0;  // -1仅运行一次后删除, 0-运行一次保留状态, 其他运行间隔
         bool deleted = false;
         bool work_flag = false;

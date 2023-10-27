@@ -48,8 +48,11 @@ constexpr const char *base_file_name(const char *const p) {
     return ret;
 }
 
+extern const char *make_current_ts();
+
 #define LOG_BASE(color, tag, fmt, ...)                                                                                 \
-    printf(color "[%s][%s:%s:%d] " fmt "\n" COLOR_NOR, tag, base_file_name(__FILE__), __func__, __LINE__, ##__VA_ARGS__)
+    printf(color "[%s][%s][%s:%s:%d] " fmt "\n" COLOR_NOR, make_current_ts(), tag, base_file_name(__FILE__), __func__, \
+           __LINE__, ##__VA_ARGS__)
 
 #define LOG_E(tag, fmt, ...) LOG_BASE(COLOR_RED, "E/" tag, fmt, ##__VA_ARGS__)
 
