@@ -52,6 +52,7 @@ void test() {
 }
 
 int main() {
+    CRoundQueue<int, 2> list;
     test();
     return 0;
 }

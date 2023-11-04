@@ -26,7 +26,7 @@ namespace wheel {
 
 template <class T, int N>
 class CRoundQueue {
-    static_assert(N > 1, "N n must be greater than 1\n");
+    static_assert(N > 1, "N must be greater than 1");
 
    public:
     using index_type = std::atomic<int>;

@@ -218,6 +218,7 @@ void CTimerHandler::onCallback(int index) {
         std::lock_guard<std::mutex> guard(m_poolMtx);
         auto &item = m_entrySet.at(index);
         item.work_flag = true;
+        item.pause = item.interval <= 0? true: item.pause;
         item.tp = std::chrono::steady_clock::now();
         cb = item.func;
     }
