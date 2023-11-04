@@ -35,7 +35,8 @@ void onTimer2() {
 }
 
 int main() {
-    CTimer::single_shot(100, onTimer);
+    LOG_I("TEST", "single shot");
+    CTimer::single_shot(1000, onTimer);
 
     CTimer timer2{"test-timer2", 1000, 0, onTimer2};
     timer2.start();

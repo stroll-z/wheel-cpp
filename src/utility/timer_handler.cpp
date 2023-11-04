@@ -90,18 +90,21 @@ int CTimerHandler::cycle_shot(const std::string &desc, int delay_ms, int interva
 
 void CTimerHandler::fill_entry(std::vector<handler_entry>::iterator it, const std::string &desc, int delay,
                                int interval, CTimer::func_type handler) {
-    it->deleted = false;
-    it->interval = interval;
-    it->delay = delay;
-    it->description = desc;
-    it->func = handler;
-    it->work_flag = false;
-    it->pause = false;
+    it->deleted_ = false;
+    it->interval_ = interval;
+    it->delay_ = delay;
+    it->description_ = desc;
+    it->func_ = handler;
+    it->work_flag_ = false;
+    it->pause_ = false;
+    it->tp_ = std::chrono::steady_clock::now();
 }
 
 auto CTimerHandler::find_one_free_entry() -> std::vector<handler_entry>::iterator {
-    for (auto it = m_entrySet.begin(); it != m_entrySet.end(); ++it) {
-        if (it->deleted) {
+    auto end_it = m_entrySet.end();
+    for (auto it = m_entrySet.begin(); it != end_it; ++it) {
+        if (it->deleted_) {
+            TIMER_DEBUG("find free entry: %d", static_cast<int>(end_it - it));
             return it;
         }
     }
@@ -116,7 +119,7 @@ int CTimerHandler::update_entry_interval(int id, int ms) {
 
     std::lock_guard<std::mutex> guard(m_poolMtx);
     auto &item = m_entrySet[id];
-    item.interval = ms;
+    item.interval_ = ms;
     return 0;
 }
 
@@ -129,7 +132,8 @@ int CTimerHandler::onPause(int index, bool pause) {
     LOG_I(TAG, "pause: %d", pause);
     std::lock_guard<std::mutex> guard(m_poolMtx);
     auto &item = m_entrySet[index];
-    item.pause = pause;
+    item.pause_ = pause;
+    item.tp_ = std::chrono::steady_clock::now();
     return 0;
 }
 
@@ -137,8 +141,8 @@ int CTimerHandler::remove(int id) {
     CHECK_HANDLER_ID(id, m_entrySet);
     std::lock_guard<std::mutex> guard(m_poolMtx);
     auto &item = m_entrySet[id];
-    item.deleted = true;
-    item.func = nullptr;
+    item.deleted_ = true;
+    item.func_ = nullptr;
     return 0;
 }
 
@@ -177,26 +181,27 @@ auto CTimerHandler::find_one_ready_entry() -> int {
         {
             auto curr_tp = std::chrono::steady_clock::now();
             std::lock_guard<std::mutex> guard(m_poolMtx);
-            for (auto it = m_entrySet.begin(); it != m_entrySet.end(); ++it) {
-                if (it->deleted || it->work_flag || it->pause) {
+            auto end_it = m_entrySet.end();
+            for (auto it = m_entrySet.begin(); it != end_it; ++it) {
+                if (it->deleted_ || it->work_flag_ || it->pause_) {
                     continue;
                 }
 
-                if (it->delay > 0) { /// 首次延迟执行
-                    if (it->tp + std::chrono::milliseconds(it->delay) < curr_tp) {
-                        it->delay = -1;
+                if (it->delay_ > 0) { /// 首次延迟执行
+                    if (it->tp_ + std::chrono::milliseconds(it->delay_) < curr_tp) {
+                        it->delay_ = -1;
                         return it - m_entrySet.begin();
                     }
                     continue;
                 }
 
-                if (it->delay == 0) { /// 首次执行 无延迟
-                    it->delay = -1;
+                if (it->delay_== 0) { /// 首次执行 无延迟
+                    it->delay_ = -1;
                     return it - m_entrySet.begin();
                 }
 
                 /// 间隔执行
-                if (it->tp + std::chrono::milliseconds(it->interval) < curr_tp) {
+                if (it->tp_ + std::chrono::milliseconds(it->interval_) < curr_tp) {
                     return it - m_entrySet.begin();
                 }
             }
@@ -217,21 +222,21 @@ void CTimerHandler::onCallback(int index) {
     {
         std::lock_guard<std::mutex> guard(m_poolMtx);
         auto &item = m_entrySet.at(index);
-        item.work_flag = true;
-        item.pause = item.interval <= 0? true: item.pause;
-        item.tp = std::chrono::steady_clock::now();
-        cb = item.func;
+        item.work_flag_ = true;
+        //< 没有执行间隔的, 直接设置为挂起状态
+        item.pause_ = item.interval_ <= 0? true: item.pause_;
+        item.tp_ = std::chrono::steady_clock::now();
+        cb = item.func_;
+        if (item.interval_ == -1) {
+            item.deleted_ = true;
+        }
     }
 
     if (cb) cb();  // 执行准备好的handler
     {
         std::lock_guard<std::mutex> guard(m_poolMtx);
         auto &item = m_entrySet.at(index);
-        item.work_flag = false;
-        if (item.interval == -1) {
-            item.deleted = true;
-            item.func = nullptr;
-        }
+        item.work_flag_ = false;
     }
 }
 

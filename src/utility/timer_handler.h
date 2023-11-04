@@ -21,8 +21,10 @@
 
 namespace wheel {
 
+#define TIMER_DEBUG_TRACE 1
+
 #if defined(TIMER_DEBUG_TRACE)
-#define TIMER_DEBUG(FMT, ...) LOG_D(FMT, ##__VA_ARGS__)
+#define TIMER_DEBUG(FMT, ...) LOG_D("timer", FMT, ##__VA_ARGS__)
 #else
 #define TIMER_DEBUG(FMT, ...)
 #endif
@@ -30,18 +32,20 @@ namespace wheel {
 class CTimerHandler {
    public:
     struct handler_entry {
-        CTimer::func_type func;
-        std::chrono::time_point<std::chrono::steady_clock> tp;
-        std::string description;
-        int delay = 0;     // -1第一次运行后, 其他延迟时长
-        int interval = 0;  // -1仅运行一次后删除, 0-运行一次保留状态, 其他运行间隔
-        bool deleted = false;
-        bool work_flag = false;
-        bool pause = false;
+        CTimer::func_type func_;
+        std::chrono::time_point<std::chrono::steady_clock> tp_;
+        std::string description_;
+        int delay_ = 0;     // -1第一次运行后, 其他延迟时长
+        int interval_ = 0;  // -1仅运行一次后删除, 0-运行一次保留状态, 其他运行间隔
+        bool deleted_ = false;
+        bool work_flag_ = false;
+        bool pause_ = false;
 
         handler_entry() = default;
         handler_entry(const std::string &desc, int delay_ms, int interval, CTimer::func_type handler)
-            : func(handler), description(desc), delay(delay_ms), interval(interval) {}
+            : func_(handler), description_(desc), delay_(delay_ms), interval_(interval) {
+            tp_ = std::chrono::steady_clock::now();
+        }
     };
 
    public:
